@@ -85,7 +85,7 @@ So speaking of the example data, this would mean following algorithm:
 
 *   Find the first node with a class name of comment.
 
-*   Repeat the this node two times and recursively process the first and second comment.
+*   Repeat this node two times and recursively process the first and second comment.
 
 *   Descend into the node with class `top`.
 
