@@ -101,6 +101,8 @@ Template.prototype = {
                 out.push("(" + cmd + ")");
                 cmd = "";
                 break;
+	    case "\n":
+		break;
             default:
                 if (expr) {
                     cmd += c;
