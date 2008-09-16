@@ -33,7 +33,7 @@ This data will be expanded with help of following template:
 
         <div class="comments">  
           <div id="comments-template">
-            <div contect="comment" class="comment">
+            <div context="comment" class="comment">
               <div class="top">
                 {website.length > 0 ? linkTo(name, website) : name} said
                 <a title="{time}"></a>:
