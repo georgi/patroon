@@ -35,12 +35,12 @@ This data will be expanded with help of following template:
           <div id="comments-template">
             <div contect="comment" class="comment">
               <div class="top">
-	        {website.length > 0 ? linkTo(name, website) : name} said
+                {website.length > 0 ? linkTo(name, website) : name} said
                 <a title="{time}"></a>:
               </div>
               <div class="text">
-	        {text}
-	      </div>
+                {text}
+              </div>
             </div>   
           </div>
         </div>
@@ -68,21 +68,21 @@ The given example renders following output:
           <div id="comments-template">
             <div class="comment">
               <div class="top">
-	        <a href="http://backham.com">David Beckham</a> said
-		<a title="2008-09-07 12:28:33">2 hours ago</a>
+                <a href="http://backham.com">David Beckham</a> said
+                <a title="2008-09-07 12:28:33">2 hours ago</a>
               </div>
               <div class="text">
-	        I watched the euro finals on tv...
-	      </div>
+                I watched the euro finals on tv...
+              </div>
             </div>   
             <div class="comment">
               <div class="top">
-	        Tuncay said
-		<a title="2008-09-07 14:28:33">1 minute ago</a>
+                Tuncay said
+                <a title="2008-09-07 14:28:33">1 minute ago</a>
               </div>
               <div class="text">
-	        Me too
-	      </div>
+                Me too
+              </div>
             </div>   
           </div>
         </div>
