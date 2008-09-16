@@ -30,9 +30,21 @@ function Template(id) {
 
     if (this.element) {
         this.element.parentNode.removeChild(this.element);
-    } else {
+    }
+    else {
         throw "template not found: " + id;
     }
+};
+
+Template.Helper = {
+
+    linkTo: function(text, url) {
+	if (url.indexOf('http://') == -1 && url[0] != '/' && url[0] != '#') {
+	    url = 'http://' + url;
+	}
+	return '<a href="' + url +'">' + text + '</a>';
+    }
+
 };
 
 Template.prototype = {
@@ -44,17 +56,11 @@ Template.prototype = {
     },
 
     expandData: function(data, node) {
-        switch (typeof data) {
-        case 'string':
-        case 'number':
-            node.innerHTML = data;
-            break;
-        case 'object':
-            if (data.constructor == Array) {
-                this.expandArray(data, node);
-            } else {
-                this.expandObject(data, node);
-            }
+        if (data.constructor == Array) {
+            this.expandArray(data, node);
+        }
+	else {
+            this.expandObject(data, node);
         }
     },
 
@@ -73,55 +79,68 @@ Template.prototype = {
     compile: function(str) {
         var len = str.length;
         var expr = false;
-        var cmd = "";
-        var lit = "";
+	var cur = '';
         var out = [];
+	var braces = 0;
 
         for (var i = 0; i < len; i++) {
             var c = str[i];
 
-            if (c == "'") {
-                c = "\\'";
-            }
-
-            if (c == "\\") {
-                c = "\\\\";
-            }
-
-            switch (c) {
-            case '{':
-                expr = true;
-                if (lit.length > 0) {
-                    out.push("'" + lit + "'");
-                }
-                lit = "";
-                break;
-            case '}':
-                expr = false;
-                out.push("(" + cmd + ")");
-                cmd = "";
-                break;
-	    case "\n":
-		break;
-            default:
-                if (expr) {
-                    cmd += c;
-                } else {
-                    lit += c;
+	    if (expr) {
+		if (c == '{') {
+		    braces += 1;
+		}
+		if (c == '}') {
+		    braces -= 1;
+		    if (braces == 0) {
+			expr = false;
+			if (cur.length > 0) {
+			    out.push("(" + cur + ")");
+			}
+			cur = "";
+		    }
+		}
+		else {
+		    cur += c;
+		}
+	    }
+	    else {
+		switch (c) {
+		case "'":
+                    cur += "\\'";
+		    break;
+		case "\\":
+                    cur += "\\\\";
+		    break;
+		case '{':
+		    expr = true;
+		    braces += 1;
+                    if (cur.length > 0) {
+			out.push("'" + cur + "'");
+                    }
+                    cur = "";
+                    break;
+		case "\n":
+		    break;
+		default:
+                    cur += c;
                 }
             }
         }
 
-        if (lit.length > 0) {
-            out.push("'" + lit + "'");
+        if (cur.length > 0) {
+            out.push("'" + cur + "'");
         }
 
-        var code = '(function (data) { with (data) { return ' + out.join('+') + '; } })';
+        var code = '(function (data) { with(Template.Helper) with (data) { return ' + out.join('+') + '; } })';
 
         return eval(code);
     },
 
     evaluate: function(str, data) {
+	if (str.indexOf('{') == -1) {
+	    return str;
+	}
         var fn = this.cache[str];
         if (!fn) {
             fn = this.cache[str] = this.compile(str);
@@ -130,9 +149,14 @@ Template.prototype = {
     },
 
     expandObject: function(object, node) {
-        var i, name;
+        var i;
         var attr = node.attributes;
-        var nodes = node.childNodes;
+        var nodes = [];
+	var child;
+
+	for (i = 0; i < node.childNodes.length; i++) {
+	    nodes.push(node.childNodes[i]);
+	}
 
         for (i = 0; i < attr.length; i++) {
             var value = attr[i].value;
@@ -142,20 +166,23 @@ Template.prototype = {
         }
 
         for (i = 0; i < nodes.length; i++) {
-            var child = nodes[i];
-            if (child.nodeType == 1 && child.className[0] == '_') {
-                this.expandData(object, child);
-            }
-            if (child.nodeType == 3 && child.nodeValue.indexOf('{') != -1)  {
-                child.nodeValue = this.evaluate(child.nodeValue, object);
-            }
-        }
-
-        for (name in object) {
-            var child = node.getElementsByClassName(name)[0];
-            if (child) {
-                this.expandData(object[name], child);
-            }
+            child = nodes[i];
+            switch (child.nodeType) {
+	    case 1:
+		var context = child.getAttribute('context');
+		if (context) {
+                    this.expandData(object[context], child);
+		}
+		else {
+		    this.expandObject(object, child);
+		}
+		break;
+	    case 3:
+		var span = document.createElement('span');
+		span.innerHTML = this.evaluate(child.nodeValue, object);
+		node.replaceChild(span, child);
+		break;
+	    }
         }
     }
 };
