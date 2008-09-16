@@ -101,6 +101,22 @@ There are 3 basic rules regarding the evaluation:
 * Code will be evaluated for text surounded with braces (works also
   for attributes).
 
+### Helper
+
+Code snippets inside the template will be executed within the scope of
+a Helper object. If you want to extend it, just add your functions to
+`Template.Helper`. At the moment it defines only one function:
+
+    Template.Helper = {
+     
+        linkTo: function(text, url) {
+            if (url.indexOf('http://') == -1 && url[0] != '/' && url[0] != '#') {
+                url = 'http://' + url;
+            }
+            return '<a href="' + url +'">' + text + '</a>';
+        }
+     
+    };
 
 ### Example Evaluation
 
