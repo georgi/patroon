@@ -30,21 +30,9 @@ function Template(id) {
 
     if (this.element) {
         this.element.parentNode.removeChild(this.element);
-    }
-    else {
+    } else {
         throw "template not found: " + id;
     }
-};
-
-Template.Helper = {
-
-    linkTo: function(text, url) {
-	if (url.indexOf('http://') == -1 && url[0] != '/' && url[0] != '#') {
-	    url = 'http://' + url;
-	}
-	return '<a href="' + url +'">' + text + '</a>';
-    }
-
 };
 
 Template.prototype = {
@@ -132,15 +120,12 @@ Template.prototype = {
             out.push("'" + cur + "'");
         }
 
-        var code = '(function (data) { with(Template.Helper) with (data) { return ' + out.join('+') + '; } })';
+        var code = '(function (data) { with (data) { return ' + out.join('+') + '; } })';
 
         return eval(code);
     },
 
     evaluate: function(str, data) {
-	if (str.indexOf('{') == -1) {
-	    return str;
-	}
         var fn = this.cache[str];
         if (!fn) {
             fn = this.cache[str] = this.compile(str);
@@ -148,11 +133,27 @@ Template.prototype = {
         return fn(data);
     },
 
+    expandByContext: function(object, node) {
+	var names = node.className.split(' ');
+	var found = false;
+
+	for (var i = 0; i < names.length; i++) {
+	    var name = names[i];
+	    if (object[name]) {
+		this.expandData(object[name], node);
+		found = true;
+	    }
+	}
+
+	if (!found) {
+	    this.expandObject(object, node);
+	}
+    },
+
     expandObject: function(object, node) {
         var i;
         var attr = node.attributes;
         var nodes = [];
-	var child;
 
 	for (i = 0; i < node.childNodes.length; i++) {
 	    nodes.push(node.childNodes[i]);
@@ -166,23 +167,13 @@ Template.prototype = {
         }
 
         for (i = 0; i < nodes.length; i++) {
-            child = nodes[i];
-            switch (child.nodeType) {
-	    case 1:
-		var context = child.getAttribute('context');
-		if (context) {
-                    this.expandData(object[context], child);
-		}
-		else {
-		    this.expandObject(object, child);
-		}
-		break;
-	    case 3:
-		var span = document.createElement('span');
-		span.innerHTML = this.evaluate(child.nodeValue, object);
-		node.replaceChild(span, child);
-		break;
-	    }
+            var child = nodes[i];
+            if (child.nodeType == 1) {
+		this.expandByContext(object, child);
+            }
+            if (child.nodeType == 3 && child.nodeValue.indexOf('{') != -1)  {
+                child.nodeValue = this.evaluate(child.nodeValue, object);
+            }
         }
     }
 };

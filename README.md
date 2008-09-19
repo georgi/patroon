@@ -2,10 +2,10 @@ Patroon - a Javascript Template Engine
 ======================================
 
 Patroon is a template engine written in Javascript in about 100 lines
-of code. It takes existing DOM nodes annotated with context attributes
-and expand a data object according to simple rules. Additionally you
-may use traditional string interpolation inside attribute values and
-text nodes.
+of code. It takes existing DOM nodes annotated with class names and
+expand a data object according to simple rules. Additionally you may
+use traditional string interpolation inside attribute values and text
+nodes.
 
 ### The Data
 
@@ -14,12 +14,12 @@ about it [here][1]. So think about a data object like this:
 
     var data = { 
       comment: [{
-        date: "2008-09-07 12:28:33", 
+        time: "2008-09-07 12:28:33", 
         name: "David Beckham",
         website: "beckham.com",
         text: "I watched the euro finals on tv..." 
       }, { 
-        date: "2008-09-07 14:28:33", 
+        time: "2008-09-07 14:28:33", 
         name: "Tuncay",
         website: "",
         text: "Me too"
@@ -33,7 +33,7 @@ This data will be expanded with help of following template:
 
         <div class="comments">  
           <div id="comments-template">
-            <div context="comment" class="comment">
+            <div class="comment">
               <div class="top">
                 {website.length > 0 ? linkTo(name, website) : name} said
                 <a title="{time}"></a>:
@@ -93,13 +93,18 @@ The given example renders following output:
 
 There are 3 basic rules regarding the evaluation:
 
-* The special node attribute `context` declares a scope, which will be
-  looked up in the current data object.
+* Each found class name of a node will be looked up in the current
+  data object. If found, the node will be processed in the new scope.
+  Example: the class name `comment` instructs to lookup the name
+  `comment` in the data object, which contains the comment array.
 
 * Arrays repeat the current node and process its elements recursively.
 
-* Code will be evaluated for text surounded with braces (works also
-  for attributes).
+* Code will be evaluated for text surrounded with braces (works also
+  for attributes). The evaluation takes place in the scope of the
+  current data object, which is in the example a comment object. So
+  the snippet `<a title="{time}">` will lookup the time in the comment
+  object and insert into the title attribute.
 
 ### Helper
 
@@ -117,22 +122,6 @@ a Helper object. If you want to extend it, just add your functions to
         }
      
     };
-
-### Example Evaluation
-
-So speaking of the example data, this would mean following algorithm:
-
-* Find the node with `comment` context.
-
-* Repeat this node two times and process the first and second comment.
-
-* Evaluate the code found in text nodes and attributes within the
-  scope of each comment.
-
-Note that we are dealing with two scopes here: the global scope and
-the comment scope. The global scope just contains a name *comment* and
-the comment scope contains the names `date`, `name`, `website` and
-`text`.
 
 ### Download
 
