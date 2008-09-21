@@ -132,8 +132,8 @@ Template.prototype = {
             out.push("'" + cur + "'");
         }
 
-        var code = '(function (data) { with (data) { return ' + out.join('+') + '; } })';
-
+        var code = '(function (data) { with(Template.Helper) with (data) return ' + out.join('+') + '; } )';
+	console.log(code);
         return eval(code);
     },
 
