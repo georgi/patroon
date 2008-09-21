@@ -27,10 +27,13 @@
 
 function Template(id) {
     this.element = document.getElementById(id);
+    this.eval = {};
 
     if (this.element) {
         this.element.parentNode.removeChild(this.element);
-    } else {
+	this.compileNode(this.element);
+    }
+    else {
         throw "template not found: " + id;
     }
 };
@@ -66,15 +69,60 @@ Template.prototype = {
 
     expandArray: function(data, node) {
         var parent = node.parentNode;
+	var sibling = node.nextSibling;
         parent.removeChild(node);
         for (var i = 0; i < data.length; i++) {
             var child = node.cloneNode(true);
-            parent.appendChild(child);
+            parent.insertBefore(child, sibling);
             this.expandData(data[i], child);
         }
     },
 
-    cache: {},
+    expandByContext: function(object, node) {
+	var names = node.className.split(' ');
+	var found = false;
+
+	for (var i = 0; i < names.length; i++) {
+	    var name = names[i];
+	    if (object[name]) {
+		this.expandData(object[name], node);
+		found = true;
+	    }
+	}
+
+	if (!found) {
+	    this.expandObject(object, node);
+	}
+    },
+
+    expandObject: function(object, node) {
+        var i;
+        var nodes = [];
+
+	for (i = 0; i < node.childNodes.length; i++) {
+	    nodes.push(node.childNodes[i]);
+	}
+
+        for (i = 0; i < node.attributes.length; i++) {
+            var attr = node.attributes[i];
+            if (this.eval[attr.value]) {
+                attr.value = this.eval[attr.value](object);
+            }
+        }
+
+        for (i = 0; i < nodes.length; i++) {
+            var child = nodes[i];
+            if (child.nodeType == 1) {
+		this.expandByContext(object, child);
+            }
+            if (child.nodeType == 3 && this.eval[child.nodeValue])  {
+		var span = document.createElement('span');
+                span.innerHTML = this.eval[child.nodeValue](object);
+		child.parentNode.replaceChild(span, child);
+            }
+        }
+    },
+
 
     compile: function(str) {
         var len = str.length;
@@ -132,63 +180,30 @@ Template.prototype = {
             out.push("'" + cur + "'");
         }
 
-        var code = '(function (data) { with(Template.Helper) with (data) return ' + out.join('+') + '; } )';
-        return eval(code);
+	this.eval[str] = new Function('data', 'with(Template.Helper) with (data) return ' + out.join('+') + ';' );
     },
 
-    evaluate: function(str, data) {
-        var fn = this.cache[str];
-        if (!fn) {
-            fn = this.cache[str] = this.compile(str);
-        }
-        return fn(data);
-    },
+    compileNode: function(node) {
+	var i;
 
-    expandByContext: function(object, node) {
-	var names = node.className.split(' ');
-	var found = false;
-
-	for (var i = 0; i < names.length; i++) {
-	    var name = names[i];
-	    if (object[name]) {
-		this.expandData(object[name], node);
-		found = true;
+	if (node.nodeType == 1) {
+            for (i = 0; i < node.attributes.length; i++) {
+		var value = node.attributes[i].value;
+		if (value.indexOf('{') > -1) {
+		    this.compile(value);
+		}
+	    }
+	    for (i = 0; i < node.childNodes.length; i++) {
+		this.compileNode(node.childNodes[i]);
 	    }
 	}
 
-	if (!found) {
-	    this.expandObject(object, node);
-	}
-    },
-
-    expandObject: function(object, node) {
-        var i;
-        var attr = node.attributes;
-        var nodes = [];
-
-	for (i = 0; i < node.childNodes.length; i++) {
-	    nodes.push(node.childNodes[i]);
+	if (node.nodeType == 3 && node.nodeValue.indexOf('{') > -1)  {
+	    this.compile(node.nodeValue);
 	}
 
-        for (i = 0; i < attr.length; i++) {
-            var value = attr[i].value;
-            if (value.indexOf('{') != -1) {
-                attr[i].value = this.evaluate(value, object);
-            }
-        }
-
-        for (i = 0; i < nodes.length; i++) {
-            var child = nodes[i];
-            if (child.nodeType == 1) {
-		this.expandByContext(object, child);
-            }
-            if (child.nodeType == 3 && child.nodeValue.indexOf('{') != -1)  {
-		var span = document.createElement('span');
-                span.innerHTML = this.evaluate(child.nodeValue, object);
-		child.parentNode.replaceChild(span, child);
-            }
-        }
     }
+
 };
 
 if ( typeof jQuery != "undefined" ) {
