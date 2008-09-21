@@ -35,6 +35,18 @@ function Template(id) {
     }
 };
 
+
+Template.Helper = {
+
+    linkTo: function(text, url) {
+	if (url.indexOf('http://') == -1 && url[0] != '/' && url[0] != '#') {
+	    url = 'http://' + url;
+	}
+	return '<a href="' + url +'">' + text + '</a>';
+    }
+
+};
+
 Template.prototype = {
 
     expand: function(data) {
