@@ -172,7 +172,9 @@ Template.prototype = {
 		this.expandByContext(object, child);
             }
             if (child.nodeType == 3 && child.nodeValue.indexOf('{') != -1)  {
-                child.nodeValue = this.evaluate(child.nodeValue, object);
+		var span = document.createElement('span');
+                span.innerHTML = this.evaluate(child.nodeValue, object);
+		child.parentNode.replaceChild(span, child);
             }
         }
     }
