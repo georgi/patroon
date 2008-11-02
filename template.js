@@ -31,7 +31,7 @@ function Template(id) {
 
     if (this.element) {
         this.element.parentNode.removeChild(this.element);
-	this.compileNode(this.element);
+        this.compileNode(this.element);
     }
     else {
         throw "template not found: " + id;
@@ -42,10 +42,10 @@ function Template(id) {
 Template.Helper = {
 
     linkTo: function(text, url) {
-	if (url.indexOf('http://') == -1 && url[0] != '/' && url[0] != '#') {
-	    url = 'http://' + url;
-	}
-	return '<a href="' + url +'">' + text + '</a>';
+        if (url.indexOf('http://') == -1 && url[0] != '/' && url[0] != '#') {
+            url = 'http://' + url;
+        }
+        return '<a href="' + url +'">' + text + '</a>';
     }
 
 };
@@ -62,14 +62,14 @@ Template.prototype = {
         if (data.constructor == Array) {
             this.expandArray(data, node);
         }
-	else {
+        else {
             this.expandObject(data, node);
         }
     },
 
     expandArray: function(data, node) {
         var parent = node.parentNode;
-	var sibling = node.nextSibling;
+        var sibling = node.nextSibling;
         parent.removeChild(node);
         for (var i = 0; i < data.length; i++) {
             var child = node.cloneNode(true);
@@ -79,29 +79,29 @@ Template.prototype = {
     },
 
     expandByContext: function(object, node) {
-	var names = node.className.split(' ');
-	var found = false;
+        var names = node.className.split(' ');
+        var found = false;
 
-	for (var i = 0; i < names.length; i++) {
-	    var name = names[i];
-	    if (object[name]) {
-		this.expandData(object[name], node);
-		found = true;
-	    }
-	}
+        for (var i = 0; i < names.length; i++) {
+            var name = names[i];
+            if (object[name]) {
+                this.expandData(object[name], node);
+                found = true;
+            }
+        }
 
-	if (!found) {
-	    this.expandObject(object, node);
-	}
+        if (!found) {
+            this.expandObject(object, node);
+        }
     },
 
     expandObject: function(object, node) {
         var i;
         var nodes = [];
 
-	for (i = 0; i < node.childNodes.length; i++) {
-	    nodes.push(node.childNodes[i]);
-	}
+        for (i = 0; i < node.childNodes.length; i++) {
+            nodes.push(node.childNodes[i]);
+        }
 
         for (i = 0; i < node.attributes.length; i++) {
             var attr = node.attributes[i];
@@ -113,12 +113,12 @@ Template.prototype = {
         for (i = 0; i < nodes.length; i++) {
             var child = nodes[i];
             if (child.nodeType == 1) {
-		this.expandByContext(object, child);
+                this.expandByContext(object, child);
             }
             if (child.nodeType == 3 && this.eval[child.nodeValue])  {
-		var span = document.createElement('span');
+                var span = document.createElement('span');
                 span.innerHTML = this.eval[child.nodeValue](object);
-		child.parentNode.replaceChild(span, child);
+                child.parentNode.replaceChild(span, child);
             }
         }
     },
@@ -127,50 +127,50 @@ Template.prototype = {
     compile: function(str) {
         var len = str.length;
         var expr = false;
-	var cur = '';
+        var cur = '';
         var out = [];
-	var braces = 0;
+        var braces = 0;
 
         for (var i = 0; i < len; i++) {
             var c = str[i];
 
-	    if (expr) {
-		if (c == '{') {
-		    braces += 1;
-		}
-		if (c == '}') {
-		    braces -= 1;
-		    if (braces == 0) {
-			expr = false;
-			if (cur.length > 0) {
-			    out.push("(" + cur + ")");
-			}
-			cur = "";
-		    }
-		}
-		else {
-		    cur += c;
-		}
-	    }
-	    else {
-		switch (c) {
-		case "'":
+            if (expr) {
+                if (c == '{') {
+                    braces += 1;
+                }
+                if (c == '}') {
+                    braces -= 1;
+                    if (braces == 0) {
+                        expr = false;
+                        if (cur.length > 0) {
+                            out.push("(" + cur + ")");
+                        }
+                        cur = "";
+                    }
+                }
+                else {
+                    cur += c;
+                }
+            }
+            else {
+                switch (c) {
+                case "'":
                     cur += "\\'";
-		    break;
-		case "\\":
+                    break;
+                case "\\":
                     cur += "\\\\";
-		    break;
-		case '{':
-		    expr = true;
-		    braces += 1;
+                    break;
+                case '{':
+                    expr = true;
+                    braces += 1;
                     if (cur.length > 0) {
-			out.push("'" + cur + "'");
+                        out.push("'" + cur + "'");
                     }
                     cur = "";
                     break;
-		case "\n":
-		    break;
-		default:
+                case "\n":
+                    break;
+                default:
                     cur += c;
                 }
             }
@@ -180,27 +180,27 @@ Template.prototype = {
             out.push("'" + cur + "'");
         }
 
-	this.eval[str] = new Function('data', 'with(Template.Helper) with (data) return ' + out.join('+') + ';' );
+        this.eval[str] = new Function('data', 'with(Template.Helper) with (data) return ' + out.join('+') + ';' );
     },
 
     compileNode: function(node) {
-	var i;
+        var i;
 
-	if (node.nodeType == 1) {
+        if (node.nodeType == 1) {
             for (i = 0; i < node.attributes.length; i++) {
-		var value = node.attributes[i].value;
-		if (value.indexOf('{') > -1) {
-		    this.compile(value);
-		}
-	    }
-	    for (i = 0; i < node.childNodes.length; i++) {
-		this.compileNode(node.childNodes[i]);
-	    }
-	}
+                var value = node.attributes[i].value;
+                if (value.indexOf('{') > -1) {
+                    this.compile(value);
+                }
+            }
+            for (i = 0; i < node.childNodes.length; i++) {
+                this.compileNode(node.childNodes[i]);
+            }
+        }
 
-	if (node.nodeType == 3 && node.nodeValue.indexOf('{') > -1)  {
-	    this.compile(node.nodeValue);
-	}
+        if (node.nodeType == 3 && node.nodeValue.indexOf('{') > -1)  {
+            this.compile(node.nodeValue);
+        }
 
     }
 
