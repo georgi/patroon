@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="Patroon : Javascript Template Engine" />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Patroon</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/georgi/patroon">View on GitHub</a>
+
+          <h1 id="project_title">Patroon</h1>
+          <h2 id="project_tagline">Javascript Template Engine</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/georgi/patroon/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/georgi/patroon/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1>Patroon - a Javascript Template Engine</h1>
+
+<p>Patroon is a template engine written in Javascript in about 100 lines
+of code. It takes existing DOM nodes annotated with class names and
+expand a data object according to simple rules. Additionally you may
+use traditional string interpolation inside attribute values and text
+nodes.</p>
+
+<h3>The Data</h3>
+
+<p>Comments in this blog are stored as a list of JSON objects, I wrote
+about it <a href="commenting-system-with-lightweight-json-store.html">here</a>. So think about a data object like this:</p>
+
+<pre><code>var data = { 
+  comment: [{
+    time: "2008-09-07 12:28:33", 
+    name: "David Beckham",
+    website: "beckham.com",
+    text: "I watched the euro finals on tv..." 
+  }, { 
+    time: "2008-09-07 14:28:33", 
+    name: "Tuncay",
+    website: "",
+    text: "Me too"
+  }]
+};
+</code></pre>
+
+<h3>The Template</h3>
+
+<p>This data will be expanded with help of following template:</p>
+
+<pre><code>    &lt;div class="comments"&gt;  
+      &lt;div id="comments-template"&gt;
+        &lt;div class="comment"&gt;
+          &lt;div class="top"&gt;
+            {website.length &gt; 0 ? linkTo(name, website) : name} said
+            &lt;a title="{time}"&gt;&lt;/a&gt;:
+          &lt;/div&gt;
+          &lt;div class="text"&gt;
+            {text}
+          &lt;/div&gt;
+        &lt;/div&gt;   
+      &lt;/div&gt;
+    &lt;/div&gt;
+</code></pre>
+
+<h3>Usage</h3>
+
+<p>The javascript to actually execute this template looks like this:</p>
+
+<pre><code>// The comments template will be removed from the DOM!
+var template = new Template('comments-template');
+
+// Expand the template into the comments section
+$('.comments').expand(template, data);
+</code></pre>
+
+<p>If you don't want to use jQuery, please look at the end of this article.</p>
+
+<h3>Output</h3>
+
+<p>The given example renders following output:</p>
+
+<pre><code>    &lt;div class="comments"&gt;  
+      &lt;div id="comments-template"&gt;
+        &lt;div class="comment"&gt;
+          &lt;div class="top"&gt;
+            &lt;a href="http://backham.com"&gt;David Beckham&lt;/a&gt; said
+            &lt;a title="2008-09-07 12:28:33"&gt;2 hours ago&lt;/a&gt;
+          &lt;/div&gt;
+          &lt;div class="text"&gt;
+            I watched the euro finals on tv...
+          &lt;/div&gt;
+        &lt;/div&gt;   
+        &lt;div class="comment"&gt;
+          &lt;div class="top"&gt;
+            Tuncay said
+            &lt;a title="2008-09-07 14:28:33"&gt;1 minute ago&lt;/a&gt;
+          &lt;/div&gt;
+          &lt;div class="text"&gt;
+            Me too
+          &lt;/div&gt;
+        &lt;/div&gt;   
+      &lt;/div&gt;
+    &lt;/div&gt;
+</code></pre>
+
+<h3>Basic Rules</h3>
+
+<p>There are 3 basic rules regarding the evaluation:</p>
+
+<ul>
+<li><p>Each found class name of a node will be looked up in the current
+data object. If found, the node will be processed in the new scope.
+Example: the class name <code>comment</code> instructs to lookup the name
+<code>comment</code> in the data object, which contains the comment array.</p></li>
+<li><p>Arrays repeat the current node and process its elements recursively.</p></li>
+<li><p>Code will be evaluated for text surrounded with braces (works also
+for attributes). The evaluation takes place in the scope of the
+current data object, which is in the example a comment object. So
+the snippet <code>&lt;a title="{time}"&gt;</code> will lookup the time in the comment
+object and insert into the title attribute.</p></li>
+</ul><h3>Helper</h3>
+
+<p>Code snippets inside the template will be executed within the scope of
+a Helper object. If you want to extend it, just add your functions to
+<code>Template.Helper</code>. At the moment it defines only one function:</p>
+
+<pre><code>Template.Helper = {
+
+    linkTo: function(text, url) {
+        if (url.indexOf('http://') == -1 &amp;&amp; url[0] != '/' &amp;&amp; url[0] != '#') {
+            url = 'http://' + url;
+        }
+        return '&lt;a href="' + url +'"&gt;' + text + '&lt;/a&gt;';
+    }
+
+};
+</code></pre>
+
+<h3>Download</h3>
+
+<p>Download the script at my <a href="http://github.com/georgi/patroon/tree/master">github repository</a>.</p>
+
+<h3>Without jQuery</h3>
+
+<p>Without jQuery template expansion is a bit verbose:</p>
+
+<pre><code>// The comments template will be removed from the DOM!
+var template = new Template('comments-template');
+
+// template will result in a new DOM node
+var result = template.expand(data);
+
+// insert the resulting node into the comments container
+var container = document.getElementsByClassName('comments')[0];
+container.appendChild(result);
+</code></pre>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Patroon maintained by <a href="https://github.com/georgi">georgi</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
